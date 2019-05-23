@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  traefik:
+    image: traefik
+    container_name: traefik
+    command: --web  --docker --logLevel=DEBUG
+    networks:
+      - routing
+    ports:
+      - 80:80
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /dev/null:/traefik.toml
+    labels:
+      traefik.enable: true
+      traefik.docker.network: routing
+      traefik.port: 8080
+      traefik.backend: traefik
+      traefik.logLevel: DEBUG
+      traefik.docker.endpoint: unix:///var/run/docker.sock
+      traefik.docker.domain: docker.localhost
+      traefik.docker.watch: true
+    
+  doccano:
+      image: chakkiworks/doccano
+      container_name: doccano
+      volumes:
+        - doccano-data:/doccano
+      networks:
+        - routing
+      labels:
+              traefik.backend: doccano
+              traefik.docker.network: routing
+              traefik.frontend.rule: Host:doccano.localhost
+              traefik.port: 80
+volumes:
+  doccano-data: {}
+
+networks:
+  routing:
+    driver: bridge
